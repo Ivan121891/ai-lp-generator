@@ -1,0 +1,80 @@
+@import "tailwindcss";
+
+@theme {
+  --color-dark: #1a1a1a;
+  --color-dark-2: #2a2a2a;
+  --color-dark-3: #333333;
+  --color-dark-border: #3a3a3a;
+  --color-accent: #d85a30;
+  --color-accent-hover: #c04e28;
+  --color-accent-light: #f5a623;
+  --color-surface: #f5f5f5;
+  --color-surface-2: #e8e8e8;
+  --color-text: #1a1a1a;
+  --color-text-secondary: #666666;
+  --color-text-muted: #999999;
+  --color-success: #22c55e;
+  --color-warning: #f59e0b;
+  --color-danger: #ef4444;
+  --color-orange: #d85a30;
+  --color-cream: #f4f3ef;
+  --color-bg: #ffffff;
+  --font-sans: "Inter", system-ui, sans-serif;
+  --font-heading: "Inter", system-ui, sans-serif;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-sans);
+  background: var(--color-bg);
+  color: var(--color-text);
+}
+
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--color-dark-border);
+  border-radius: 3px;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.animate-fade-in {
+  animation: fadeIn 0.3s ease-out;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+.animate-spin {
+  animation: spin 1s linear infinite;
+}
+
+/* Rich text preview styling */
+.lp-preview h1 { font-size: 2.5rem; font-weight: 700; line-height: 1.2; }
+.lp-preview h2 { font-size: 1.875rem; font-weight: 600; line-height: 1.3; }
+.lp-preview h3 { font-size: 1.5rem; font-weight: 600; line-height: 1.4; }
+.lp-preview p { font-size: 1rem; line-height: 1.6; margin-bottom: 1rem; }
+.lp-preview a { color: var(--color-accent); text-decoration: underline; }
+.lp-preview ul, .lp-preview ol { padding-left: 1.5rem; margin-bottom: 1rem; }
+.lp-preview li { margin-bottom: 0.25rem; }
+.lp-preview img { max-width: 100%; border-radius: 0.5rem; margin: 1rem 0; }
+.lp-preview button {
+  padding: 0.75rem 1.5rem;
+  border-radius: 9999px;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  transition: all 0.2s;
+}
+.lp-preview .btn-primary { background: #d85a30; color: white; }
+.lp-preview .btn-primary:hover { background: #c04e28; }
+.lp-preview .btn-secondary { background: transparent; border: 1px solid #d85a30; color: #d85a30; }
+.lp-preview section { padding: 4rem 1.5rem; }
+.lp-preview .container { max-width: 1200px; margin: 0 auto; }
