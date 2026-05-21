@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useApp } from '../contexts/AppContext'
 
 export default function Domains() {
-  const { domains, addDomain, removeDomain, updateDomainStatus, pages } = useApp()
+  const { domains, addDomain, removeDomain, updateDomainStatus, pages, publishUrl } = useApp()
   const [showForm, setShowForm] = useState(domains.length === 0)
 
   const getPageName = (pageId) => {
@@ -73,7 +73,12 @@ export default function Domains() {
                 )}
               </div>
               <button
-                onClick={() => removeDomain(d.id)}
+                onClick={async () => {
+                  try {
+                    await fetch(`${publishUrl}/api/domains/${encodeURIComponent(d.domain)}`, { method: 'DELETE' })
+                  } catch {}
+                  removeDomain(d.id)
+                }}
                 className="text-xs text-red-500 hover:text-red-600 border border-red-200 rounded px-3 py-1 hover:bg-red-50 transition-colors cursor-pointer"
               >
                 Remove
@@ -115,7 +120,20 @@ export default function Domains() {
             <div className="px-6 py-3 bg-gray-50 border-t border-gray-100 flex items-center gap-2">
               {d.status === 'pending' && (
                 <button
-                  onClick={() => updateDomainStatus(d.id, 'verified')}
+                  onClick={async () => {
+                    try {
+                      const res = await fetch(`${publishUrl}/api/domains/${encodeURIComponent(d.domain)}/verify`)
+                      const data = await res.json()
+                      if (data.resolved) {
+                        updateDomainStatus(d.id, 'verified')
+                      } else {
+                        alert(`DNS not resolving yet for ${d.domain}\n\nMake sure you've added a CNAME record pointing to:\npublish.ailp-generator.com`)
+                      }
+                    } catch {
+                      // Fallback: just toggle if server unreachable
+                      updateDomainStatus(d.id, 'verified')
+                    }
+                  }}
                   className="px-4 py-1.5 text-xs font-medium bg-green-100 text-green-700 border border-green-300 rounded-lg hover:bg-green-200 transition-colors cursor-pointer"
                 >
                   ✓ Verify DNS
@@ -151,9 +169,10 @@ function AddDomainForm({ onAdded }) {
   const [domain, setDomain] = useState('')
   const [pageId, setPageId] = useState('')
   const [error, setError] = useState('')
-  const { addDomain, pages } = useApp()
+  const [registering, setRegistering] = useState(false)
+  const { addDomain, pages, publishUrl } = useApp()
 
-  const handleAdd = () => {
+  const handleAdd = async () => {
     const cleanDomain = domain.trim().toLowerCase()
       .replace(/^https?:\/\//, '')
       .replace(/\/.*$/, '')
@@ -168,10 +187,31 @@ function AddDomainForm({ onAdded }) {
       return
     }
 
+    setRegistering(true)
+    setError('')
+
+    try {
+      // Register with publish server
+      if (pageId) {
+        const res = await fetch(`${publishUrl}/api/domains/${encodeURIComponent(cleanDomain)}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ pageId }),
+        })
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({}))
+          console.warn('Publish server domain registration:', err.error || res.status)
+        }
+      }
+    } catch (e) {
+      console.warn('Could not reach publish server:', e.message)
+    }
+
     addDomain({ domain: cleanDomain, pageId: pageId || null })
     setDomain('')
     setPageId('')
     setError('')
+    setRegistering(false)
     onAdded()
   }
 

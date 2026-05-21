@@ -8,12 +8,112 @@ const STORAGE_KEYS = {
   settings: 'ailp-settings',
   locations: 'ailp-locations',
   domains: 'ailp-domains',
+  publishUrl: 'ailp-publish-url',
+}
+
+function createDefaultPage() {
+  return {
+    id: crypto.randomUUID(),
+    title: 'New booking page',
+    slug: '',
+    status: 'draft',
+    createdAt: new Date().toISOString(),
+    views: 0,
+    bookings: 0,
+
+    // Styling
+    accentColor: '#d85a30',
+    bgColor: '#ffffff',
+    textColor: '#1a1a1a',
+    headingColor: '#1a1a1a',
+    subtitleColor: '#6b7280',
+    buttonTextColor: '#ffffff',
+    cornerRadius: 14,
+    headingFont: 'Inter',
+    bodyFont: 'Inter',
+    headingSize: 18,
+    bodySize: 14,
+    buttonStyle: 'filled',
+    headingWeight: '700',
+    bodyWeight: '400',
+
+    // GHL connection
+    locationId: null,
+    calendarId: null,
+    assignedUserId: null,
+
+    // Tracking
+    googleAnalyticsId: '',
+    facebookPixelId: '',
+
+    // Booking flow content
+    steps: {
+      heroDate: {
+        enabled: true,
+        headline: 'Non-Surgical Face and Neck Lift Treatment',
+        subtitle: 'Sculpt your jawline and smooth your neckline',
+        ctaText: 'BOOK NOW',
+        urgencyText: 'Limited spots this week',
+        showUrgencyBanner: true,
+        heroImage: '',
+        dateLabelFormat: '{dayOfWeek}, {monthName} {day}',
+        helperText: 'Tap a date to pick a time',
+      },
+      time: {
+        enabled: true,
+        heading: 'Select a time',
+        helperText: 'All times - {slotCount} available',
+        showChangeDateBack: true,
+      },
+      form: {
+        enabled: true,
+        heading: 'Almost done',
+        helperText: 'Enter your details to confirm',
+        buttonText: 'Confirm appointment',
+        privacyText: 'Your info is secure · never shared',
+      },
+      confirmation: {
+        enabled: true,
+        heading: "You're booked!",
+        message: 'A text confirmation is on its way.',
+        showBookingReference: false,
+      },
+    },
+
+    // Service/price block
+    service: {
+      show: true,
+      name: 'Treatment name',
+      description: 'Treatment description',
+      price: '$129',
+      period: 'per session',
+    },
+
+    // Before/after gallery
+    gallery: {
+      show: false,
+      heading: 'Real results',
+      pairs: [],
+    },
+
+    // Business info
+    businessName: '',
+    address: '',
+    phone: '',
+    showFooter: true,
+
+    // Published
+    publishedUrl: '',
+    publishedAt: null,
+  }
 }
 
 export function AppProvider({ children }) {
   const [pages, setPages] = useState(() => {
-    const saved = localStorage.getItem(STORAGE_KEYS.pages)
-    return saved ? JSON.parse(saved) : []
+    try {
+      const saved = localStorage.getItem(STORAGE_KEYS.pages)
+      return saved ? JSON.parse(saved) : []
+    } catch { return [] }
   })
 
   const [apiKey, setApiKey] = useState(() => {
@@ -21,28 +121,49 @@ export function AppProvider({ children }) {
   })
 
   const [settings, setSettings] = useState(() => {
-    const saved = localStorage.getItem(STORAGE_KEYS.settings)
-    return saved ? JSON.parse(saved) : {
-      accentColor: '#d85a30',
-      accentTextColor: '#ffffff',
-      bgColor: '#ffffff',
-      textColor: '#1a1a1a',
-      cornerRadius: 14,
-      headingFont: 'Inter',
-      model: 'openai/gpt-4o-mini',
+    try {
+      const saved = localStorage.getItem(STORAGE_KEYS.settings)
+      return saved ? JSON.parse(saved) : {
+        accentColor: '#d85a30',
+        accentTextColor: '#ffffff',
+        bgColor: '#ffffff',
+        textColor: '#1a1a1a',
+        cornerRadius: 14,
+        headingFont: 'Inter',
+        model: 'openai/gpt-4o-mini',
+      }
+    } catch {
+      return {
+        accentColor: '#d85a30',
+        accentTextColor: '#ffffff',
+        bgColor: '#ffffff',
+        textColor: '#1a1a1a',
+        cornerRadius: 14,
+        headingFont: 'Inter',
+        model: 'openai/gpt-4o-mini',
+      }
     }
   })
 
   const [locations, setLocations] = useState(() => {
-    const saved = localStorage.getItem(STORAGE_KEYS.locations)
-    return saved ? JSON.parse(saved) : []
+    try {
+      const saved = localStorage.getItem(STORAGE_KEYS.locations)
+      return saved ? JSON.parse(saved) : []
+    } catch { return [] }
   })
 
   const [domains, setDomains] = useState(() => {
-    const saved = localStorage.getItem(STORAGE_KEYS.domains)
-    return saved ? JSON.parse(saved) : []
+    try {
+      const saved = localStorage.getItem(STORAGE_KEYS.domains)
+      return saved ? JSON.parse(saved) : []
+    } catch { return [] }
   })
 
+  const [publishUrl, setPublishUrl] = useState(() => {
+    return localStorage.getItem(STORAGE_KEYS.publishUrl) || 'http://localhost:3008'
+  })
+
+  // Persist all state
   useEffect(() => {
     localStorage.setItem(STORAGE_KEYS.pages, JSON.stringify(pages))
   }, [pages])
@@ -63,8 +184,14 @@ export function AppProvider({ children }) {
     localStorage.setItem(STORAGE_KEYS.domains, JSON.stringify(domains))
   }, [domains])
 
-  const addPage = useCallback((page) => {
-    setPages(prev => [{ ...page, id: crypto.randomUUID(), createdAt: new Date().toISOString(), views: 0, bookings: 0 }, ...prev])
+  useEffect(() => {
+    localStorage.setItem(STORAGE_KEYS.publishUrl, publishUrl)
+  }, [publishUrl])
+
+  const addPage = useCallback((overrides = {}) => {
+    const page = { ...createDefaultPage(), ...overrides, id: overrides.id || crypto.randomUUID() }
+    setPages(prev => [page, ...prev])
+    return page.id
   }, [])
 
   const removePage = useCallback((id) => {
@@ -112,6 +239,7 @@ export function AppProvider({ children }) {
       settings, setSettings,
       locations, addLocation, removeLocation, updateLocationStatus,
       domains, addDomain, removeDomain, updateDomainStatus,
+      publishUrl, setPublishUrl,
       totalViews, totalBookings, overallConversion,
     }}>
       {children}

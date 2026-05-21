@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useApp } from '../contexts/AppContext'
 
 export default function Settings() {
-  const { apiKey, setApiKey, settings, setSettings } = useApp()
+  const { apiKey, setApiKey, settings, setSettings, publishUrl, setPublishUrl } = useApp()
   const [localKey, setLocalKey] = useState(apiKey)
   const [saved, setSaved] = useState(false)
 
@@ -61,6 +61,20 @@ export default function Settings() {
           <option value="google/gemini-2.0-flash-001">Gemini 2.0 Flash</option>
           <option value="meta-llama/llama-3.3-70b-instruct">Llama 3.3 70B</option>
         </select>
+      </div>
+
+      {/* Publish server */}
+      <div className="bg-white border border-gray-200 rounded-xl p-6 mb-6">
+        <h2 className="text-sm font-semibold text-gray-900 mb-1">Publish Server</h2>
+        <p className="text-xs text-gray-400 mb-4">
+          Where published pages are deployed. Default runs on port 3008 locally.
+        </p>
+        <input
+          value={publishUrl}
+          onChange={e => setPublishUrl(e.target.value)}
+          placeholder="http://localhost:3008"
+          className="w-full border border-gray-200 rounded-lg p-2.5 text-sm font-mono focus:outline-none focus:border-[#d85a30]"
+        />
       </div>
 
       {/* Default style */}
